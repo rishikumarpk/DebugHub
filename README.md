@@ -1,6 +1,6 @@
 <div align="center">
   <br />
-  <h1>🐛 DebugHub</h1>
+  <h1>🐛 DebugHub (A Hackathon Project)</h1>
   <p>
     <strong>A gamified, AI-powered platform for software engineers to hone their debugging skills.</strong>
   </p>
