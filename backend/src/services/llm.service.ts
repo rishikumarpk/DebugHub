@@ -1,11 +1,11 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-let aiInstance: GoogleGenAI | null = null;
+let aiInstance: GoogleGenerativeAI | null = null;
 function getAi() {
     if (aiInstance) return aiInstance;
     const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
-        aiInstance = new GoogleGenAI({ apiKey });
+        aiInstance = new GoogleGenerativeAI(apiKey);
     }
     return aiInstance;
 }
@@ -28,13 +28,16 @@ export async function generateAiDiagnosticPath(bugType: string, buggyCode: strin
 Return strictly the JSON array, no markdown formatting.`;
 
     try {
-        const response = await ai.models.generateContent({
+        const model = ai.getGenerativeModel({
             model: "gemini-1.5-flash",
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
+            generationConfig: { responseMimeType: "application/json" }
         });
 
-        return JSON.parse(response.text || "[]");
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        return JSON.parse(text || "[]");
     } catch (error) {
         console.error("LLM Generation failed:", error);
         return [];
@@ -126,14 +129,17 @@ Return exactly a JSON object with the following fields:
 Return strictly the JSON object, no markdown formatting.`;
 
     try {
-        const response = await ai.models.generateContent({
+        const model = ai.getGenerativeModel({
             model: "gemini-1.5-flash",
-            contents: prompt,
-            config: { responseMimeType: "application/json" }
+            generationConfig: { responseMimeType: "application/json" }
         });
 
-        const data = JSON.parse(response.text || "{}");
-        if (data.issues) {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        const data = JSON.parse(text || "{}");
+        if (data.issues && Array.isArray(data.issues)) {
             data.issues = JSON.stringify(data.issues);
         }
         return data;
@@ -168,13 +174,12 @@ Keep it under 2 sentences. Speak like an experienced on-call engineer advising a
 `;
 
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
-            contents: prompt
-        });
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        // The response text may have quotes or be raw text
-        return response.text?.trim() || "Check the recent logs for clues.";
+        return text?.trim() || "Check the recent logs for clues.";
     } catch (error) {
         console.error("LLM Generation failed for personalized hint:", error);
         return "System error: unable to establish connection with senior engineering staff for advice.";
