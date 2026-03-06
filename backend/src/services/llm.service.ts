@@ -29,7 +29,7 @@ Return strictly the JSON array, no markdown formatting.`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
@@ -127,7 +127,7 @@ Return strictly the JSON object, no markdown formatting.`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: prompt,
             config: { responseMimeType: "application/json" }
         });
@@ -169,7 +169,7 @@ Keep it under 2 sentences. Speak like an experienced on-call engineer advising a
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash",
             contents: prompt
         });
 
