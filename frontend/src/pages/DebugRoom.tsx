@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
+import { API_URL, getAuthHeaders } from '../config';
 import { Editor } from '@monaco-editor/react';
 import { Check, ShieldCheck, User as UserIcon, Loader2, ArrowLeft } from 'lucide-react';
 import Badge from '../components/ui/Badge';
@@ -23,7 +23,10 @@ export function DebugRoom() {
 
     const fetchCurrentUser = async () => {
         try {
-            const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/auth/me`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
+            });
             const data = await res.json();
             if (data.success) setCurrentUser(data.data);
         } catch (e) {
@@ -34,7 +37,10 @@ export function DebugRoom() {
     const fetchRoom = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/api/rooms/${id}`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/api/rooms/${id}`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
+            });
             const data = await res.json();
             if (data.success) {
                 setRoom(data.data);
@@ -52,7 +58,10 @@ export function DebugRoom() {
         try {
             const res = await fetch(`${API_URL}/api/rooms/${id}/fixes`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ fixedCode: suggestedCode, explanation }),
                 credentials: 'include'
             });
@@ -71,7 +80,8 @@ export function DebugRoom() {
         try {
             const res = await fetch(`${API_URL}/api/rooms/${id}/fixes/${fixId}/apply`, {
                 method: 'POST',
-                credentials: 'include'
+                credentials: 'include',
+                headers: getAuthHeaders()
             });
             const data = await res.json();
             if (data.success) {

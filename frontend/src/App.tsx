@@ -23,7 +23,25 @@ export default function App() {
   const { user, setUser, setLoading, isLoading } = useAuthStore();
 
   useEffect(() => {
-    fetch(`${API_URL}/auth/me`, { credentials: 'include' })
+    // Capture token from URL if present (from Google redirect)
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('auth_token', token);
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    const authToken = localStorage.getItem('auth_token');
+    const headers: any = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    fetch(`${API_URL}/auth/me`, {
+      credentials: 'include',
+      headers
+    })
       .then(res => res.json())
       .then(data => {
         if (data.success) {

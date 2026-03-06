@@ -11,7 +11,11 @@ export function Login() {
     };
 
     const handleMockLogin = async () => {
-        await fetch(`${Login_API_URL}/auth/mock-login`, { method: 'POST', credentials: 'include' });
+        const res = await fetch(`${Login_API_URL}/auth/mock-login`, { method: 'POST', credentials: 'include' });
+        const data = await res.json();
+        if (data.success && data.token) {
+            localStorage.setItem('auth_token', data.token);
+        }
         window.location.href = `${import.meta.env.VITE_APP_URL || 'http://localhost:5173'}/`;
     };
 

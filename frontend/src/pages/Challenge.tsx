@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import SplitPathView from '../components/ui/SplitPathView';
-import { API_URL } from '../config';
+import { API_URL, getAuthHeaders } from '../config';
 
 interface Challenge {
     id: string;
@@ -45,7 +45,10 @@ export function Challenge() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`${API_URL}/api/challenges/today`, { credentials: 'include' })
+        fetch(`${API_URL}/api/challenges/today`, {
+            credentials: 'include',
+            headers: getAuthHeaders()
+        })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
@@ -96,7 +99,10 @@ export function Challenge() {
             if (!challenge) throw new Error('Mock');
             const res = await fetch(`${API_URL}/api/challenges/${challenge.id}/run`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ code }),
                 credentials: 'include'
             });
@@ -119,7 +125,10 @@ export function Challenge() {
             if (!challenge) throw new Error('Mock');
             const res = await fetch(`${API_URL}/api/challenges/${challenge.id}/submit`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ code, hintsUsed: hintsRevealed, timeTakenMs: timeElapsed * 1000 }),
                 credentials: 'include'
             });
@@ -131,7 +140,10 @@ export function Challenge() {
                     setAttemptId(data.data.attemptId);
                 }
                 // Refresh user data in the global store to update streak/topbar
-                fetch(`${API_URL}/auth/me`, { credentials: 'include' })
+                fetch(`${API_URL}/auth/me`, {
+                    credentials: 'include',
+                    headers: getAuthHeaders()
+                })
                     .then(r => r.json())
                     .then(d => {
                         if (d.success) {
@@ -230,7 +242,10 @@ export function Challenge() {
                                         return;
                                     }
                                     try {
-                                        const res = await fetch(`${API_URL}/api/challenges/${activeChallenge.id}/answer`, { credentials: 'include' });
+                                        const res = await fetch(`${API_URL}/api/challenges/${activeChallenge.id}/answer`, {
+                                            credentials: 'include',
+                                            headers: getAuthHeaders()
+                                        });
                                         const data = await res.json();
                                         if (data.success) {
                                             setCode(data.data.correctCode);

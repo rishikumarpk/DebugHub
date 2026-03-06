@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL } from '../config';
+import { API_URL, getAuthHeaders } from '../config';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { Save, User, Code, Bell, Shield, Trash2 } from 'lucide-react';
@@ -32,7 +32,10 @@ export default function Settings() {
         try {
             const res = await fetch(`${API_URL}/api/preferences`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ preferredLanguage: defaultLanguage }),
                 credentials: 'include'
             });

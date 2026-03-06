@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, ChevronDown, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Badge from '../components/ui/Badge';
-import { API_URL } from '../config';
+import { API_URL, getAuthHeaders } from '../config';
 import Button from '../components/ui/Button';
 
 import CreateRoomModal from '../components/community/CreateRoomModal';
@@ -19,7 +19,10 @@ export function Community() {
     const fetchRooms = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/api/rooms`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/api/rooms`, {
+                credentials: 'include',
+                headers: getAuthHeaders()
+            });
             const data = await res.json();
             if (data.success) {
                 setRooms(data.data);
