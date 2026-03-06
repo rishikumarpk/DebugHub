@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  googleId          String?  @unique
+  username          String   @unique
+  avatarUrl         String?
+  preferredLanguage String   @default("python") // python | java | cpp
+  createdAt         DateTime @default(now())
+  streak            DebugStreak?
+  attempts          ChallengeAttempt[]
+  diagnosticPaths   DiagnosticPath[]
+  rooms             DebugRoom[]
+  fixes             SuggestedFix[]
+}
+
+model DailyChallenge {
+  id             String   @id @default(cuid())
+  date           DateTime
+  type           String   @default("DEBUGGING") // DEBUGGING | CODE_REVIEW
+  language       String
+  bugType        String   // SYNTAX | LOGICAL | EDGE_CASE | PERFORMANCE | REAL_WORLD
+  difficulty     String   // EASY | MEDIUM | HARD
+  context        String   // 1-2 line realistic project description
+  buggyCode      String
+  correctCode    String   // never sent to client before solve
+  expectedOutput String
+  hint1          String
+  hint2          String
+  hint3          String
+  issues         String?  // JSON array of issues for CODE_REVIEW challenges
+  attempts       ChallengeAttempt[]
+  diagnosticPaths DiagnosticPath[]
+
+  @@unique([date])
+}
+
+model PracticeChallenge {
+  id             String   @id @default(cuid())
+  language       String
+  bugType        String   // SYNTAX | LOGICAL | EDGE_CASE | PERFORMANCE | REAL_WORLD
+  difficulty     String   // EASY | MEDIUM | HARD
+  context        String   
+  buggyCode      String
+  correctCode    String   
+  expectedOutput String
+  hint1          String
+  hint2          String
+  hint3          String
+  issues         String?  // JSON array for CODE_REVIEW challenges
+}
+
+model ChallengeAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  solved      Boolean  @default(false)
+  hintsUsed   Int      @default(0)
+  timeTakenMs Int?
+  issuesFound Int?     // for CODE_REVIEW
+  totalIssues Int?     // for CODE_REVIEW
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  challenge   DailyChallenge @relation(fields: [challengeId], references: [id])
+  diagnosticPath DiagnosticPath?
+}
+
+model DiagnosticPath {
+  id             String   @id @default(cuid())
+  challengeId    String
+  userId         String?  // null if it's the official AI or Expert path
+  attemptId      String?  @unique // if it's a human path
+  pathType       String   // HUMAN | AI | EXPERT
+  steps          String   // JSON array of steps
+  matchScore     Int?     // for HUMAN paths: how well it matched the expert/AI path
+  createdAt      DateTime @default(now())
+  
+  challenge      DailyChallenge    @relation(fields: [challengeId], references: [id])
+  user           User?             @relation(fields: [userId], references: [id])
+  attempt        ChallengeAttempt? @relation(fields: [attemptId], references: [id])
+}
+
+model DebugStreak {
+  userId            String   @id
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  rhythmScore       Int      @default(0)  // 0-100
+  avgReasoningScore Int      @default(0)  // 0-100
+  lastSolvedDate    DateTime?
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model DebugRoom {
+  id          String   @id @default(cuid())
+  title       String
+  language    String
+  difficulty  String
+  summary     String
+  buggyCode   String
+  status      String   @default("open") // open | solved
+  creatorId   String
+  createdAt   DateTime @default(now())
+  
+  creator     User     @relation(fields: [creatorId], references: [id])
+  fixes       SuggestedFix[]
+}
+
+model SuggestedFix {
+  id          String   @id @default(cuid())
+  roomId      String
+  userId      String
+  fixedCode   String
+  explanation String
+  isAccepted  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  room        DebugRoom @relation(fields: [roomId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+}
