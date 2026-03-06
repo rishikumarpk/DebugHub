@@ -35,7 +35,10 @@ Return strictly the JSON array, no markdown formatting.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text();
+        let text = response.text();
+
+        // Sanitize JSON response (remove potential triple backticks)
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         return JSON.parse(text || "[]");
     } catch (error) {
@@ -136,7 +139,10 @@ Return strictly the JSON object, no markdown formatting.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text();
+        let text = response.text();
+
+        // Sanitize JSON response (remove potential triple backticks)
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const data = JSON.parse(text || "{}");
         if (data.issues && Array.isArray(data.issues)) {
