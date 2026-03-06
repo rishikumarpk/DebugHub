@@ -4,6 +4,7 @@ import { Play, Check, RotateCcw, Zap, Loader2 } from 'lucide-react';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import SplitPathView from '../components/ui/SplitPathView';
+import { API_URL, getAuthHeaders } from '../config';
 
 interface PracticeChallenge {
     id: string;
@@ -55,8 +56,11 @@ export default function Practice() {
             if (diff) params.append('difficulty', diff);
             if (selectedLanguage) params.append('language', selectedLanguage);
 
-            const url = `/api/challenges/practice/generate?${params.toString()}`;
-            const res = await fetch(url, { credentials: 'include' });
+            const url = `${API_URL}/api/challenges/practice/generate?${params.toString()}`;
+            const res = await fetch(url, {
+                credentials: 'include',
+                headers: getAuthHeaders()
+            });
             const data = await res.json();
             if (data.success) {
                 setChallenge(data.data);
@@ -74,9 +78,12 @@ export default function Practice() {
         setRunning(true);
         setOutput('Running...');
         try {
-            const res = await fetch(`/api/challenges/practice/${challenge.id}/run`, {
+            const res = await fetch(`${API_URL}/api/challenges/practice/${challenge.id}/run`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ code }),
                 credentials: 'include'
             });
@@ -96,9 +103,12 @@ export default function Practice() {
         if (!challenge) return;
         setRunning(true);
         try {
-            const res = await fetch(`/api/challenges/practice/${challenge.id}/submit`, {
+            const res = await fetch(`${API_URL}/api/challenges/practice/${challenge.id}/submit`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getAuthHeaders()
+                },
                 body: JSON.stringify({ code }),
                 credentials: 'include'
             });
@@ -248,7 +258,10 @@ export default function Practice() {
                                 onClick={async () => {
                                     if (!challenge) return;
                                     try {
-                                        const res = await fetch(`/api/challenges/${challenge.id}/answer`, { credentials: 'include' });
+                                        const res = await fetch(`${API_URL}/api/challenges/${challenge.id}/answer`, {
+                                            credentials: 'include',
+                                            headers: getAuthHeaders()
+                                        });
                                         const data = await res.json();
                                         if (data.success) setCode(data.data.correctCode);
                                     } catch (e) {

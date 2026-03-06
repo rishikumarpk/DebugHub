@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { User, Sparkles, Award } from 'lucide-react';
 import Button from './Button';
+import { API_URL, getAuthHeaders } from '../../config';
 
 interface Step {
     action: string;
@@ -31,7 +32,10 @@ export default function SplitPathView({ challengeId, attemptId, onClose }: Split
 
     // Initial load
     useState(() => {
-        fetch(`/api/ai/paths/${challengeId}/${attemptId}`, { credentials: 'include' })
+        fetch(`${API_URL}/api/ai/paths/${challengeId}/${attemptId}`, {
+            credentials: 'include',
+            headers: getAuthHeaders()
+        })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
