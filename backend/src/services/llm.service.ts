@@ -3,12 +3,13 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 let aiInstance: GoogleGenerativeAI | null = null;
 function getAi() {
     if (aiInstance) return aiInstance;
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey) {
-        console.log(`[AI] Initializing Gemini with key length: ${apiKey.length}, starts with: ${apiKey.substring(0, 7)}...`);
+    const rawKey = process.env.GEMINI_API_KEY;
+    if (rawKey) {
+        const apiKey = rawKey.trim();
+        console.log(`[AI] Initializing Gemini with sanitized key (length: ${apiKey.length})`);
         aiInstance = new GoogleGenerativeAI(apiKey);
     } else {
-        console.error('[AI] CRITICAL: GEMINI_API_KEY is missing from environment variables!');
+        console.error('[AI] CRITICAL: GEMINI_API_KEY is missing!');
     }
     return aiInstance;
 }
@@ -39,13 +40,32 @@ Return strictly the JSON array, no markdown formatting.`;
 
         for (const modelName of modelsToTry) {
             try {
-                const model = ai.getGenerativeModel({ model: modelName });
+                console.log(`[AI-Path] Trying model: ${modelName} (force v1)`);
+                // Force v1 api version which is more stable for standard keys
+                const model = ai.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
                 text = response.text();
                 if (text) break;
             } catch (e: any) {
-                console.warn(`[AI-Path] Model ${modelName} failed: ${e.message}`);
+                console.warn(`[AI-Path] Model ${modelName} SDK failed: ${e.message}`);
+
+                // FINAL FALLBACK: Direct REST API call if SDK fails
+                try {
+                    console.log(`[AI-Path] Trying Direct REST fallback for ${modelName}...`);
+                    const fetch = require('node-fetch');
+                    const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY?.trim()}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const resData = await res.json();
+                    text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) break;
+                } catch (fetchErr) {
+                    console.error(`[AI-Path] Direct REST also failed: ${modelName}`);
+                }
                 attemptError = e;
             }
         }
@@ -157,14 +177,31 @@ Return strictly the JSON object, no markdown formatting.`;
 
         for (const modelName of modelsToTry) {
             try {
-                console.log(`[AI-Challenge] Trying model: ${modelName}`);
-                const model = ai.getGenerativeModel({ model: modelName });
+                console.log(`[AI-Challenge] Trying model: ${modelName} (force v1)`);
+                const model = ai.getGenerativeModel({ model: modelName }, { apiVersion: 'v1' });
                 const result = await model.generateContent(prompt);
                 const response = await result.response;
                 text = response.text();
                 if (text) break;
             } catch (e: any) {
-                console.warn(`[AI-Challenge] Model ${modelName} failed: ${e.message}`);
+                console.warn(`[AI-Challenge] Model ${modelName} SDK failed: ${e.message}`);
+
+                // FINAL FALLBACK: Direct REST API call
+                try {
+                    console.log(`[AI-Challenge] Trying Direct REST fallback for ${modelName}...`);
+                    const fetch = require('node-fetch');
+                    const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY?.trim()}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const resData = await res.json();
+                    text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) break;
+                } catch (fetchErr) {
+                    console.error(`[AI-Challenge] Direct REST also failed: ${modelName}`);
+                }
                 attemptError = e;
             }
         }
