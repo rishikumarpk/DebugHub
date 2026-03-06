@@ -47,16 +47,28 @@ router.get('/paths/:challengeId/:attemptId', async (req: any, res) => {
             where: { challengeId, pathType: 'AI' }
         });
 
-        if (!aiPath) {
-            // Generate on the fly if it doesn't exist
+        // If it doesn't exist, or if it failed previously and saved an empty array
+        if (!aiPath || aiPath.steps === '[]' || aiPath.steps === 'null') {
             const steps = await generateAiDiagnosticPath(challenge.bugType, challenge.buggyCode, challenge.context);
-            aiPath = await prisma.diagnosticPath.create({
-                data: {
-                    challengeId,
-                    pathType: 'AI',
-                    steps: JSON.stringify(steps)
-                }
-            });
+
+            const stepsString = JSON.stringify(steps);
+
+            if (aiPath) {
+                // Update existing empty path
+                aiPath = await prisma.diagnosticPath.update({
+                    where: { id: aiPath.id },
+                    data: { steps: stepsString }
+                });
+            } else {
+                // Create new
+                aiPath = await prisma.diagnosticPath.create({
+                    data: {
+                        challengeId,
+                        pathType: 'AI',
+                        steps: stepsString
+                    }
+                });
+            }
         }
 
         let expertPath = await prisma.diagnosticPath.findFirst({
