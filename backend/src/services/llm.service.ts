@@ -31,21 +31,20 @@ export async function generateAiDiagnosticPath(bugType: string, buggyCode: strin
 Return strictly the JSON array, no markdown formatting.`;
 
     try {
-        const model = ai.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            generationConfig: { responseMimeType: "application/json" }
-        });
+        console.log(`[AI-Path] Generating for: ${bugType} in ${context}...`);
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let text = response.text();
 
-        // Sanitize JSON response (remove potential triple backticks)
+        // Sanitize JSON
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        console.log(`[AI-Path] Success, response length: ${text.length}`);
 
         return JSON.parse(text || "[]");
-    } catch (error) {
-        console.error("LLM Generation failed:", error);
+    } catch (error: any) {
+        console.error("[AI-Path] Generation failed:", error.message);
         return [];
     }
 }
@@ -135,25 +134,24 @@ Return exactly a JSON object with the following fields:
 Return strictly the JSON object, no markdown formatting.`;
 
     try {
-        const model = ai.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            generationConfig: { responseMimeType: "application/json" }
-        });
+        console.log(`[AI-Challenge] Generating a ${difficulty} ${language} challenge...`);
+        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let text = response.text();
 
-        // Sanitize JSON response (remove potential triple backticks)
+        // Sanitize JSON
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        console.log(`[AI-Challenge] Success, response length: ${text.length}`);
 
         const data = JSON.parse(text || "{}");
         if (data.issues && Array.isArray(data.issues)) {
             data.issues = JSON.stringify(data.issues);
         }
         return data;
-    } catch (error) {
-        console.error("LLM Generation failed:", error);
+    } catch (error: any) {
+        console.error("[AI-Challenge] Generation failed:", error.message);
         throw error;
     }
 }
@@ -183,14 +181,16 @@ Keep it under 2 sentences. Speak like an experienced on-call engineer advising a
 `;
 
     try {
+        console.log(`[AI-Hint] Generating personalized hint for scenario...`);
         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
+        console.log(`[AI-Hint] Success, response length: ${text?.length || 0}`);
         return text?.trim() || "Check the recent logs for clues.";
-    } catch (error) {
-        console.error("LLM Generation failed for personalized hint:", error);
+    } catch (error: any) {
+        console.error("[AI-Hint] Generation failed:", error.message);
         return "System error: unable to establish connection with senior engineering staff for advice.";
     }
 }
