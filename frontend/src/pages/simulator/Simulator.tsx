@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSimulationEngine } from '../../hooks/useSimulationEngine';
 import { AlertTriangle, Loader2, BellRing, MessageSquare, Terminal, Users, X } from 'lucide-react';
+import { API_URL } from '../../config';
 import type { SimulationRole } from '../../data/incidents/types';
 import { BlastRadius } from '../../components/simulator/BlastRadius';
 import { RevenueGraph } from '../../components/simulator/RevenueGraph';
@@ -64,7 +65,7 @@ export default function Simulator() {
             const fetchHint = async () => {
                 setDynamicHint("Consulting senior engineers for advice...");
                 try {
-                    const res = await fetch('/api/ai/incident-hint', {
+                    const res = await fetch(`${API_URL}/api/ai/incident-hint`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

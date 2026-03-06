@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { LogOut, Crown } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { API_URL } from '../../config';
 import PricingModal from '../ui/PricingModal';
 
 const Topbar = () => {
@@ -10,7 +11,7 @@ const Topbar = () => {
 
     const handleLogout = async () => {
         try {
-            await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+            await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
         } catch (e) { }
         setUser(null);
     };

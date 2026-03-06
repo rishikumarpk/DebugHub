@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import SplitPathView from '../components/ui/SplitPathView';
+import { API_URL } from '../config';
 
 interface Challenge {
     id: string;
@@ -44,7 +45,7 @@ export function Challenge() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('/api/challenges/today', { credentials: 'include' })
+        fetch(`${API_URL}/api/challenges/today`, { credentials: 'include' })
             .then(r => r.json())
             .then(d => {
                 if (d.success) {
@@ -93,7 +94,7 @@ export function Challenge() {
         try {
             await new Promise(r => setTimeout(r, 600));
             if (!challenge) throw new Error('Mock');
-            const res = await fetch(`/api/challenges/${challenge.id}/run`, {
+            const res = await fetch(`${API_URL}/api/challenges/${challenge.id}/run`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code }),
@@ -116,7 +117,7 @@ export function Challenge() {
         setRunning(true);
         try {
             if (!challenge) throw new Error('Mock');
-            const res = await fetch(`/api/challenges/${challenge.id}/submit`, {
+            const res = await fetch(`${API_URL}/api/challenges/${challenge.id}/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code, hintsUsed: hintsRevealed, timeTakenMs: timeElapsed * 1000 }),
@@ -130,7 +131,7 @@ export function Challenge() {
                     setAttemptId(data.data.attemptId);
                 }
                 // Refresh user data in the global store to update streak/topbar
-                fetch('/auth/me', { credentials: 'include' })
+                fetch(`${API_URL}/auth/me`, { credentials: 'include' })
                     .then(r => r.json())
                     .then(d => {
                         if (d.success) {
@@ -229,7 +230,7 @@ export function Challenge() {
                                         return;
                                     }
                                     try {
-                                        const res = await fetch(`/api/challenges/${activeChallenge.id}/answer`, { credentials: 'include' });
+                                        const res = await fetch(`${API_URL}/api/challenges/${activeChallenge.id}/answer`, { credentials: 'include' });
                                         const data = await res.json();
                                         if (data.success) {
                                             setCode(data.data.correctCode);

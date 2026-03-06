@@ -14,6 +14,7 @@ dotenv.config();
 console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const app = express();
+app.set('trust proxy', 1);
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
@@ -24,7 +25,9 @@ import roomsRoutes from './routes/rooms';
 
 // Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+    origin: process.env.NODE_ENV === 'production'
+        ? [process.env.FRONTEND_URL || '', 'https://debughub.vercel.app']
+        : 'http://localhost:5173',
     credentials: true,
 }));
 app.use(express.json());
@@ -86,13 +89,19 @@ app.get('/auth/google/callback',
         // Set httpOnly cookie
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: true, // Always true for cross-domain SameSite=none
+            sameSite: 'none',
             maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         });
 
         // Redirect to frontend dashboard
-        const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5173');
+        let frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5173');
+
+        // Ensure absolute URL if it doesn't start with http/https or /
+        if (frontendUrl !== '/' && !frontendUrl.startsWith('http://') && !frontendUrl.startsWith('https://')) {
+            frontendUrl = `https://${frontendUrl}`;
+        }
+
         res.redirect(frontendUrl);
     }
 );

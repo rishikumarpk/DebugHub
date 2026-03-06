@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { X, Loader2 } from 'lucide-react';
+import { API_URL } from '../../config';
 import Button from '../ui/Button';
 
 interface CreateRoomModalProps {
@@ -22,7 +23,7 @@ export default function CreateRoomModal({ onClose, onCreated }: CreateRoomModalP
         setLoading(true);
         setError('');
         try {
-            const res = await fetch('/api/rooms', {
+            const res = await fetch(`${API_URL}/api/rooms`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, language, difficulty, summary, buggyCode }),

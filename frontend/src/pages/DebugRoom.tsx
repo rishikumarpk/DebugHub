@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
+import { useAuthStore } from '../store/useAuthStore';
 import { Editor } from '@monaco-editor/react';
 import { Check, ShieldCheck, User as UserIcon, Loader2, ArrowLeft } from 'lucide-react';
 import Badge from '../components/ui/Badge';
@@ -18,12 +20,11 @@ export function DebugRoom() {
     useEffect(() => {
         fetchCurrentUser();
         fetchRoom();
-        // optionally poll for new suggestions here
     }, [id]);
 
     const fetchCurrentUser = async () => {
         try {
-            const res = await fetch('/auth/me', { credentials: 'include' });
+            const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) setCurrentUser(data.data);
         } catch (e) {
@@ -34,11 +35,11 @@ export function DebugRoom() {
     const fetchRoom = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/rooms/${id}`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/api/rooms/${id}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
                 setRoom(data.data);
-                setSuggestedCode(data.data.buggyCode); // prefill with buggy code
+                setSuggestedCode(data.data.buggyCode);
             }
         } catch (e) {
             console.error('Failed to fetch room');
@@ -50,7 +51,7 @@ export function DebugRoom() {
         if (!suggestedCode || !explanation) return;
         setSubmitting(true);
         try {
-            const res = await fetch(`/api/rooms/${id}/fixes`, {
+            const res = await fetch(`${API_URL}/api/rooms/${id}/fixes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ fixedCode: suggestedCode, explanation }),
@@ -59,7 +60,7 @@ export function DebugRoom() {
             const data = await res.json();
             if (data.success) {
                 setExplanation('');
-                fetchRoom(); // refresh list
+                fetchRoom();
             }
         } catch (e) {
             console.error(e);
@@ -69,7 +70,7 @@ export function DebugRoom() {
 
     const handleApplyFix = async (fixId: string) => {
         try {
-            const res = await fetch(`/api/rooms/${id}/fixes/${fixId}/apply`, {
+            const res = await fetch(`${API_URL}/api/rooms/${id}/fixes/${fixId}/apply`, {
                 method: 'POST',
                 credentials: 'include'
             });
@@ -94,16 +95,13 @@ export function DebugRoom() {
 
     return (
         <div className="w-full max-w-[1200px] mx-auto p-4 sm:p-8 flex gap-8 h-[calc(100vh-64px)]">
-            {/* Left side: Context & Chat/Suggestions */}
             <div className="w-[350px] flex flex-col gap-4 border-r border-[#E0E0E026] pr-8 h-full shrink-0">
-
                 <button
                     onClick={() => navigate('/community')}
                     className="flex items-center gap-2 text-[13px] text-[#E0E0E073] hover:text-[#E0E0E0] transition-colors mb-2"
                 >
                     <ArrowLeft size={16} /> Back to Community
                 </button>
-
                 <div>
                     <h1 className="font-display text-[20px] font-bold text-[#E0E0E0] leading-tight mb-2">
                         {room.title}
@@ -117,11 +115,9 @@ export function DebugRoom() {
                         <span>Posted by {room.creator.username}</span>
                     </div>
                 </div>
-
                 <div className="bg-[#03030333] border border-[#E0E0E040] rounded-[12px] p-4 text-[13px] text-[#E0E0E0] font-body leading-relaxed">
                     {room.summary}
                 </div>
-
                 <div className="flex-1 flex flex-col mt-4 min-h-0">
                     <h3 className="text-[14px] font-bold text-[#E0E0E0] mb-3">Community Suggestions</h3>
                     <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-2 custom-scrollbar">
@@ -143,12 +139,10 @@ export function DebugRoom() {
                                         )}
                                     </div>
                                     <p className="text-[13px] text-[#E0E0E0] mb-3">{fix.explanation}</p>
-
                                     <div className="flex justify-between items-center mt-2">
                                         <Button variant="outline" className="text-[11px] py-1 px-3" onClick={() => setSuggestedCode(fix.fixedCode)}>
                                             View Code
                                         </Button>
-
                                         {isCreator && room.status === 'open' && (
                                             <Button variant="outline" className="text-[11px] py-1 px-3 border-[#E0E0E0] text-[#E0E0E0]" onClick={() => handleApplyFix(fix.id)}>
                                                 Apply This Fix
@@ -161,8 +155,6 @@ export function DebugRoom() {
                     </div>
                 </div>
             </div>
-
-            {/* Right side: Editor */}
             <div className="flex-1 flex flex-col h-full bg-[#030303] border border-[#E0E0E040] rounded-[16px] overflow-hidden">
                 <div className="h-[48px] bg-[#030303] border-b border-[#E0E0E040] flex items-center px-4 justify-between">
                     <span className="font-display text-[14px] font-bold text-[#E0E0E0]">
@@ -174,7 +166,6 @@ export function DebugRoom() {
                         </span>
                     )}
                 </div>
-
                 <div className="flex-1">
                     <Editor theme="vs-dark"
                         height="100%"
@@ -190,7 +181,6 @@ export function DebugRoom() {
                         }}
                     />
                 </div>
-
                 {room.status === 'open' && !isCreator && (
                     <div className="p-4 border-t border-[#E0E0E040] bg-[#030303] flex gap-3">
                         <input

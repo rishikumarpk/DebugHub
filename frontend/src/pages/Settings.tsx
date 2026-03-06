@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 import { useAuthStore } from '../store/useAuthStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { Save, User, Code, Bell, Shield, Trash2 } from 'lucide-react';
@@ -29,7 +31,7 @@ export default function Settings() {
 
     const handleSave = async () => {
         try {
-            const res = await fetch('/api/preferences', {
+            const res = await fetch(`${API_URL}/api/preferences`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ preferredLanguage: defaultLanguage }),

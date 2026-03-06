@@ -10,6 +10,7 @@ import Layout from './components/layout/Layout';
 import { DebugRoom } from './pages/DebugRoom';
 import { DebugReplay } from './pages/DebugReplay';
 import { useAuthStore } from './store/useAuthStore';
+import { API_URL } from './config';
 import DailyChallengesTracker from './pages/DailyChallengesTracker';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
@@ -22,7 +23,7 @@ export default function App() {
   const { user, setUser, setLoading, isLoading } = useAuthStore();
 
   useEffect(() => {
-    fetch('/auth/me', { credentials: 'include' })
+    fetch(`${API_URL}/auth/me`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         if (data.success) {

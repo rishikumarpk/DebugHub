@@ -1,17 +1,17 @@
 import { Bug } from 'lucide-react';
 import { DottedSurface } from '@/components/ui/dotted-surface';
 
-const API_URL = import.meta.env.VITE_API_URL !== undefined
-    ? import.meta.env.VITE_API_URL
-    : (import.meta.env.PROD ? '' : 'http://localhost:3001');
+import { API_URL } from '@/config';
+
+const Login_API_URL = API_URL;
 
 export function Login() {
     const handleGoogleLogin = () => {
-        window.location.href = `${API_URL}/auth/google`;
+        window.location.href = `${Login_API_URL}/auth/google`;
     };
 
     const handleMockLogin = async () => {
-        await fetch(`${API_URL}/auth/mock-login`, { method: 'POST', credentials: 'include' });
+        await fetch(`${Login_API_URL}/auth/mock-login`, { method: 'POST', credentials: 'include' });
         window.location.href = `${import.meta.env.VITE_APP_URL || 'http://localhost:5173'}/`;
     };
 
