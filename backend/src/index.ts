@@ -102,13 +102,24 @@ app.get('/auth/google/callback',
             frontendUrl = `https://${frontendUrl}`;
         }
 
-        res.redirect(frontendUrl);
+        // Append token to URL as a fallback for 3rd party cookie blocking
+        const separator = frontendUrl.includes('?') ? '&' : '?';
+        res.redirect(`${frontendUrl}${separator}token=${token}`);
     }
 );
 
 // Auth Middleware
 export const authenticateJWT = (req: any, res: any, next: any) => {
-    const token = req.cookies.token;
+    let token = req.cookies.token;
+
+    // Also check Authorization header
+    if (!token && req.headers.authorization) {
+        const parts = req.headers.authorization.split(' ');
+        if (parts.length === 2 && parts[0] === 'Bearer') {
+            token = parts[1];
+        }
+    }
+
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
     jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
@@ -147,11 +158,11 @@ app.post('/auth/mock-login', async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 1000 * 60 * 60 * 24 * 7
     });
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: user, token });
 });
 
 app.post('/auth/logout', (req, res) => {
