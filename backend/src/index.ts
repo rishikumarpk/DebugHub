@@ -35,7 +35,7 @@ app.use(passport.initialize());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'mock',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'mock',
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback'
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || (process.env.NODE_ENV === 'production' ? '/auth/google/callback' : 'http://localhost:3001/auth/google/callback')
 },
     async (accessToken, refreshToken, profile, done) => {
         try {
@@ -182,8 +182,8 @@ app.use('/api/ai', authenticateJWT, aiRoutes);
 app.use('/api/rooms', authenticateJWT, roomsRoutes);
 
 app.get('/', (req, res) => {
-    res.json({ 
-        status: "online", 
+    res.json({
+        status: "online",
         message: "DebugHub API is running",
         timestamp: new Date().toISOString()
     });
